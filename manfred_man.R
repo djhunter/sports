@@ -62,8 +62,47 @@ game_data %>%
   ggplot(aes(fill = teams_home_is_winner, x = `Automatic Runner`)) +
   geom_bar(position = "fill") 
 
+# For extra inning games, the home team winning percentage has actually
+# been lower since the automatic runner has been instituted.
+game_data_extra <- game_data %>% 
+  filter(`Game Length` == "Extra Innings") %>%
+  filter(!is.na(teams_home_is_winner)) %>%
+  select(`Automatic Runner`, teams_home_is_winner)
+table(game_data_extra)
+prop.table(table(game_data_extra), margin = 1)
+prop.test(table(game_data_extra))
+# However, the difference is not significant.
+game_data_extra <- game_data %>% 
+  filter(`Game Length` == "Extra Innings") %>%
+  filter(!is.na(teams_home_is_winner)) %>%
+  select(`Automatic Runner`, teams_home_is_winner)
+table(game_data_extra)
+prop.table(table(game_data_extra), margin = 1)
+prop.test(table(game_data_extra))
+
+# For all games, the home team is less likely to win if the game
+# goes into extra innings. (50% vs 53%)
 chisq.test(game_data$`Game Length`, game_data$teams_home_is_winner)
+summary(glm(teams_home_is_winner ~ `Game Length` + `Automatic Runner`, 
+            data = game_data, family = "binomial"))
 winnerextra <- game_data %>%
   select(`Game Length`, teams_home_is_winner) 
 prop.test(table(winnerextra))
 table(winnerextra)
+prop.table(table(winnerextra), margin = 1)
+prop.test(table(winnerextra))
+
+library(vcd)
+game_data_simple <- game_data %>%
+  transmute(`Winning Team` = ifelse(teams_home_is_winner, "Home", "Away"),
+            `Automatic Runner` = ifelse(`Automatic Runner`, "Y", "N"),
+            `Game Length` = `Game Length`)
+   
+xrtable <- structable(`Winning Team` ~ `Game Length` + `Automatic Runner`, 
+                  data = game_data_simple)
+mosaic(xrtable,
+       shade = TRUE)
+
+mosaic(xrtable,
+       gp = shading_Friendly2,
+       legend = FALSE)
