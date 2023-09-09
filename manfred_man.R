@@ -83,8 +83,15 @@ prop.test(table(game_data_extra))
 # For all games, the home team is less likely to win if the game
 # goes into extra innings. (50% vs 53%)
 chisq.test(game_data$`Game Length`, game_data$teams_home_is_winner)
+# Logistic model
 summary(glm(teams_home_is_winner ~ `Game Length` + `Automatic Runner`, 
             data = game_data, family = "binomial"))
+# Logistic model with interaction
+summary(glm(teams_home_is_winner ~ `Game Length` * `Automatic Runner`, 
+            data = game_data, family = "binomial"))
+# log-linear model
+summary(glm(teams_home_is_winner ~ `Game Length` * `Automatic Runner`, 
+            data = game_data, family = "poisson"))
 winnerextra <- game_data %>%
   select(`Game Length`, teams_home_is_winner) 
 prop.test(table(winnerextra))
@@ -96,7 +103,8 @@ library(vcd)
 game_data_simple <- game_data %>%
   transmute(`Winning Team` = ifelse(teams_home_is_winner, "Home", "Away"),
             `Automatic Runner` = ifelse(`Automatic Runner`, "Y", "N"),
-            `Game Length` = `Game Length`)
+            `Game Length` = `Game Length`) %>%
+  drop_na()
    
 xrtable <- structable(`Winning Team` ~ `Game Length` + `Automatic Runner`, 
                   data = game_data_simple)
@@ -106,3 +114,14 @@ mosaic(xrtable,
 mosaic(xrtable,
        gp = shading_Friendly2,
        legend = FALSE)
+
+game_data_simple %>%
+  group_by(`Winning Team`, `Automatic Runner`, `Game Length`) %>%
+  summarize(Freq = n()) ->
+  game_data_table
+summary(glm(Freq ~ `Winning Team` * `Automatic Runner` * `Game Length`, 
+            data = game_data_table, family = "poisson"))
+
+summary(glm(Freq ~ `Winning Team` + `Automatic Runner` + `Game Length`, 
+            data = game_data_table, family = "poisson"))
+
