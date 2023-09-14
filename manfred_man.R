@@ -48,7 +48,7 @@ game_data <- game_innings %>%
 game_data %>%
   filter(`Game Length` == "Extra Innings") %>%
   ggplot(aes(x = duration, fill = `Automatic Runner`)) +
-  geom_density(alpha = 0.5) +
+  geom_density(alpha = 0.5, position = "stack") +
   scale_x_time()
 
 game_data %>%
